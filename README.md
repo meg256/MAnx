@@ -1,4 +1,4 @@
-# Snakemake workflow: MANx (Microbial Assembler quaNtitative eXploration)
+# Snakemake workflow: MAnx (Microbial Assembler quaNtitative eXploration)
 
 [![Workflow rule graph]([LINK/TO/OUTPUT.svg)]([https://github.com/snakemake/snakemake/blob/main/docs/snakefiles/deployment.rst](https://github.com/snakemake/snakemake/blob/main/docs/snakefiles/deployment.rst))](Snakemake Deployment Best Practices)
 
