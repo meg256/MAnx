@@ -1,4 +1,154 @@
-# Main entrypoint of the workflow. 
-# Please follow the best practices: 
-# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there. 
+import pandas as pd
+from snakemake.utils import min_version
+
+##### set minimum snakemake version #####
+min_version("8.8.0")
+
+##### setup report #####
+configfile: "config/config.yaml"
+
+RESULTS_DIR = config["results"]
+#report: "report/workflow.rst"
+#report: "report/assemblyqc.html"
+
+##### setup singularity ####
+# this container defines the underlying OS for each job when using the workflow
+# with --use-conda --use-singularity
+#container: "docker://continuumio/miniconda3"
+
+#### samples ####
+SAMPLES = pd.read_csv(config["samples"]).set_index(["sample", "species"], drop=False)
+
+
+UNITS = pd.read_csv(config['units'])
+datasets = list(UNITS['dataset'])
+unitdict = dict(zip(UNITS.dataset,UNITS.numreads))
+print(unitdict)
+
+
+def get_read_paths(wildcards):
+    return {"FW": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna(), "RV": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()}
+
+#def get_species(wildcards):
+#    return SAMPLES.loc[wildcards.sample, ['species']].drpona()
+
+##### target rules #####
+
+rule all:
+    input:
+        expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+        expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
+
+rule get_input:
+    input:
+        unpack(get_read_paths),
+    output:
+        FWOUT="results/rawreads/{species}/{sample}_1.fastq.gz", 
+        RVOUT="results/rawreads/{species}/{sample}_2.fastq.gz"
+    shell:
+        """
+        cp {input.FW} {output.FWOUT}
+        cp {input.RV} {output.RVOUT}
+        """
+
+#rule downsample:
+#    input:
+#        unpack(get_read_paths),
+#    output:
+#        #FWOUT = expand(f"results/reads/lowcov/{{sp}}/{{sample}}_1.fastq.gz", zip, sp=SPECIES, sample=SAMS),
+#        #RVOUT = expand(f"results/reads/lowcov/{{sp}}/{{sample}}_2.fastq.gz", zip, sp=SPECIES, sample=SAMS),
+##        expand(f"results/reads/lowcov/{{sp}}/{{sample}}_1.fastq.gz, zip, sp=samples["species"], sample=samples["samplename"]),
+#        expand(f"results/reads/lowcov/{{sp}}/{{sample}}_2.fastq.gz, zip, sp=samples["species"], sample=samples["samplename"]),
+#        #expand(expand("results/reads/{{d}}/{sp}/{sample}_1.fastq.gz", zip, sp=SAMPLES["sample"], sample=SAMPLES["species"]), d=datasets, read=[["1", "2"]]),
+#    params:
+#        numsams = len(SAMPLES),
+#        numreads = 100000, #get_readnum
+#    container:
+#        config["singularity_input"],    
+#    shell:
+#        """
+#        SEED=echo $((1 + $RANDOM % {params.numsams}))
+##        FWLN=$(gunzip -c {input.FW} | awk 'END {print NR/4}');
+##       RVLN=$(gunzip -c {input.RV} | awk 'END {print NR/4}');
+#        FWFRAC=$(python3 -c "print('{:.2f}'.format({numreads} / $RVLN))")
+#       RVFRAC=$(python3 -c "print('{:.2f}'.format({numreads} / $RVLN))")
+#        seqtk sample -s $SEED {input.FW} $FWFRAC > {output.FWOUT};
+#        seqtk sample -s $SEED {input.RV} $RVFRAC > {output.RVOUT};
+#        """
+
+
+# #FWOUT = expand("results/reads/lowcov/{species}/{sample}_1.fastq.gz"),#, zip, sp=SAMPLES['species'], sample=SAMPLES##['sample']),
+#        #RVOUT = expand("results/reads/lowcov/{species}/{sample}_2.fastq.gz"),#, zip, sp=SAMPLES['species'], sample=SAMPLES['sample']),
+#        #expand(f"results/reads/lowcov/{{sp}}/{{sample}}_1.fastq.gz", zip, sp=SAMPLES["species"], sample=SAMPLES["sample"]),
+#        #expand(f"results/reads/lowcov/{{sp}}/{{sample}}_2.fastq.gz", zip, sp=SAMPLES["species"], sample=SAMPLES["sample"]),
+#        #expand(expand("results/reads/{{d}}/{sp}/{sample}_{{read}}.fastq.gz", zip, sp=SAMPLES["sample"], sample=SAMPLES["species"]), d=datasets, read=[["1", "2"]]),
+#        expand("results/reads/lowcov/{species}/{sample}_1.fastq.gz"),
+
+#for i,d in enumerate(datasets):
+#    rulename = f"input_{i}"
+#    rule rulename:
+#        input:
+#            FW = get_R1,
+#            RV = get_R2,
+#        output:
+#            FWOUT = expand(f"results/reads/{d}/{{sp}}/{{sample}}_1.fastq.gz", zip, sp=SPECIES, #sample=SAMS),
+#            RVOUT = expand(f"results/reads/{d}/{{sp}}/{{sample}}_2.fastq.gz", zip, sp=SPECIES, #sample=SAMS),
+#        params:
+#            numsams = len(SAMPLES),
+#            numreads = UNITS.loc[d, ["numreads"]].dropna()
+#        container:
+#            config["singularity_input"],    
+#        shell:
+##            """
+#            SEED=echo $((1 + $RANDOM % {params.numsams}))
+#            FWLN=$(gunzip -c {input.FW} | awk 'END {print NR/4}');
+#            RVLN=$(gunzip -c {input.RV} | awk 'END {print NR/4}');
+#            FWFRAC=$(python3 -c "print('{:.2f}'.format({numreads} / $RVLN))")
+#            RVFRAC=$(python3 -c "print('{:.2f}'.format({numreads} / $RVLN))")
+#            seqtk sample -s $SEED {input.FW} $FWFRAC > {output.FWOUT};
+#            seqtk sample -s $SEED {input.RV} $RVFRAC > {output.RVOUT};
+#            """
+
+
+
+#wildcard_constraints:
+#    sams="|".join(list(SAMPLES["sample"])),
+#    d="|".join(list(UNITS["dataset"])),
+#    species="|".join(list(SAMPLES["species"])),
+
+# wildcard_constraints:
+#    # Constraints maybe not needed but in my opinion better to set them
+#    sample='|'.join([re.escape(x) for x in samples['samplename']]),
+#    filepath='|'.join([re.escape(x) for x in samples.filepath]),
+#    species='|'.join([re.escape(x) for x in samples.species]),
+
+
+# #could use a lookup function to get species or genome ref?
+# #def _get_fastx(wildcards, column_name = samples_column):
+# #   return samples.loc[wildcards.sample, [column_name]].dropna()[0]
+
+##### Modules #####
+#include: "rules/get_isolates.smk"
+#include: "rules/trim.smk"
+#include: "rules/assemble.smk"
+#include: "rules/postassembly.smk"
+#include: "rules/stats.smk"
+
+        #"reports/package_versions.tsv",
+        #"reports/assemblyqc.html", 
+        #"results/quast/combinedquast.tsv",
+        #"results/checkm/combinedcheckm.tsv",
+        #expand("assembly/{d}/{trimcond}/{assem}/{species}/{sample}.fasta"), #all fastas from all assemblers from all trim conditions from all downsampled datasets
+        #expand("results/trimmed/{d}/trimmomatic/{sp}/{sample}_2.trimmed.fastq.gz", zip, d=datasets, sp=SPECIES, sample=SAMS), #all trimmed reads in all downsampled datasets
+        #expand("results/trimmed/{d}/trimmomatic/{sp}/{sample}_1.trimmed.fastq.gz", zip, d=datasets, sp=SPECIES, sample=SAMS),
+
+
+#samples = pd.read_csv(config["samples"], dtype=str).set_index(["sample"], drop=False)
+#SPECIES = list(SAMPLES["species"])
+#SAMS = list(SAMPLES["sample"])
+
+#SAMPLES = pd.read_csv(config["samples"], sep="\t").set_index(["species", "sample"], drop=False).sort_index()
+
+
+#def get_readnum(dataset):
+#    return UNITS.loc[wildcards.dataset, ["numreads"]].dropna()
