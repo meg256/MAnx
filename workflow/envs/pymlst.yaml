@@ -1,0 +1,6 @@
+name: pymlst
+
+dependencies:
+  bioconda::pymlst=2.1.6-0
+  blat
+  mafft

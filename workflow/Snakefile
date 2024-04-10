@@ -8,24 +8,28 @@ min_version("8.8.0")
 configfile: "config/config.yaml"
 
 RESULTS_DIR = config["results"]
-#report: "report/workflow.rst"
+report: "report/workflow.rst"
 #report: "report/assemblyqc.html"
 
 ##### setup singularity ####
 # this container defines the underlying OS for each job when using the workflow
-# with --use-conda --use-singularity
+# with --use-conda --use-singularity?
 #container: "docker://continuumio/miniconda3"
 
 #### samples ####
 SAMPLES = pd.read_csv(config["samples"]).set_index(["sample", "species"], drop=False)
+ECOLI_SAMS = samples.loc[samples["species"]=="Ecoli"]
 
-UNITS = pd.read_csv(config['units'])
-datasets = list(UNITS['dataset'])
-unitdict = dict(zip(UNITS.dataset,UNITS.numreads))
-print(unitdict)
+#UNITS = pd.read_csv(config['units'])
+#datasets = list(UNITS['dataset'])
+#unitdict = dict(zip(UNITS.dataset,UNITS.numreads))
+#print(unitdict)
 
 def get_read_paths(wildcards):
     return {"FW": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna(), "RV": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()}
+
+#def aggregate_input(wildcards):
+#        checkpoint_output = checkpoints.ecoli_pymlst.get(**wildcards).output[0]
 
 ##### target rules #####
 
@@ -85,6 +89,29 @@ rule filter_contigs:
         "results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta"
     shell:
         "python3 workflow/scripts/filter_contigs.py -i {input} -o {output} -c 20 -l 500"
+
+
+if ECOLI_SAMS:
+    checkpoint ecoli_pymlst:
+        input:
+            expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered_contigs.fasta", sample=ECOLI_SAMS["sample"]),
+        output:
+            "results/mlst/Ecoli_mlst.tsv",
+        params:
+           database = "/data/projects/mary/MAnx/testrun/Escherichia.db"
+           #database = check_database(config["pymlst"]["database"]),
+            #min_id = check_min_id(config["pymlst"]["min_id"]),
+        conda:
+            "envs/pymlst.yaml",
+        threads: 2,
+        resources:
+            time = 10,
+            mem = 8000,
+        shell: "claMLST search {params.db} {input} -o {output}"
+
+
+
+
 
 #rule BBdecon:
 #    output:
