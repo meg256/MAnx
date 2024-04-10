@@ -25,12 +25,17 @@ ECOLI_SAMS = SAMPLES.loc[SAMPLES["species"]=="Ecoli"]
 #unitdict = dict(zip(UNITS.dataset,UNITS.numreads))
 #print(unitdict)
 
+def get_species_samples(wildcards):
+    subs = SAMPLES.loc[SAMPLES["species"]==wildcards.species]
+    return subs["sample"]
+
 def get_read_paths(wildcards):
     return {"FW": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna(), "RV": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()}
 
 ##### target rules #####
 
-aggregated_input = [expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #filter contigs
+aggregated_input = [expand("results/quast/{species}_assembly_report.tsv", species=set(SAMPLES["species"])), #quast
+                    expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #filter contigs
                     expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #assembly
                     expand("results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #trim
                     expand("results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
@@ -59,7 +64,6 @@ rule copy_raw_reads:
         [[ -f {input.FW} ]] && cp {input.FW} {output.FWOUT}
         [[ -f {input.RV} ]] && cp {input.RV} {output.RVOUT}
         """
-
 rule trim:
     input:
         FW="results/rawreads/{species}/{sample}_1.fastq.gz", 
@@ -93,12 +97,26 @@ rule filter_contigs:
     shell:
         "python3 workflow/scripts/filter_contigs.py -i {input} -o {output} -c 20 -l 500"
 
+rule quast:
+    input:
+        "results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta",# zip, species=set(SAMPLES["species"]), sample=get_species_samples,
+    output:
+        quastdir = temp(directory("results/quast/report")),
+        quastfile = "results/quast/filtered_assembly_report.tsv",
+    conda:
+        "envs/quast.yaml",
+    shell:
+        """
+        quast  -o  {output.quastdir} {input}
+        mv {output.quastdir}/transposed_report.tsv {output.quastfile}       
+        """
+
 
 checkpoint ecoli_pymlst:
     input:
         expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered.fasta", sample=ECOLI_SAMS["sample"]),
     output:
-        "results/mlst/Ecoli_mlst.tsv",
+        report("results/mlst/Ecoli_mlst.tsv" caption="report/Ecoli_mlst.tsv", category="mlst"),
     params:
         database = "testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
         #database = check_database(config["pymlst"]["database"]),
