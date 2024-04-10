@@ -91,7 +91,7 @@ rule filter_contigs:
         "python3 workflow/scripts/filter_contigs.py -i {input} -o {output} -c 20 -l 500"
 
 
-if ECOLI_SAMS:
+if not ECOLI_SAMS.empty():
     checkpoint ecoli_pymlst:
         input:
             expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered_contigs.fasta", sample=ECOLI_SAMS["sample"]),
