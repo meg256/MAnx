@@ -5,6 +5,8 @@ samples: config/samples.tsv
 
 units: config/units.tsv
 
+numThreads: 4
+
 singularity_input: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/seqviz"
 singularity_trim: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/newtrim"
 singularity_assemble: "docker-registry.wur.nl/wfsr-genomics/ngs-tools/skesa"

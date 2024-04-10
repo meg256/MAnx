@@ -20,11 +20,6 @@ report: "report/workflow.rst"
 SAMPLES = pd.read_csv(config["samples"]).set_index(["sample", "species"], drop=False)
 ECOLI_SAMS = SAMPLES.loc[SAMPLES["species"]=="Ecoli"]
 
-#UNITS = pd.read_csv(config['units'])
-#datasets = list(UNITS['dataset'])
-#unitdict = dict(zip(UNITS.dataset,UNITS.numreads))
-#print(unitdict)
-
 def get_species_samples(wildcards):
     subs = SAMPLES.loc[SAMPLES["species"]==wildcards.species]
     return subs["sample"]
@@ -72,7 +67,7 @@ rule trim:
         FWOUT="results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz",
         RVOUT="results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz"
     params:
-        numThreads = 25,
+        numThreads = config['numThreads'],
     conda:
         "envs/bbtools.yaml"
     shell: "bbduk.sh -Xmx10g t={params.numThreads} in1={input.FW} in2={input.RV} out1={output.FWOUT} out2={output.RVOUT} ref=adapters,phix ktrim=r k=31 mink=11 hdist=1 tpe tbo"
@@ -84,7 +79,7 @@ rule assemble:
     output:
         "results/assembly/skesa/{species}/{sample}.fa",
     params:
-        numThreads = 25,
+        numThreads = config['numThreads'],
     conda:
         "envs/skesa.yaml"
     shell: "skesa --reads {input.FW},{input.RV} --vector_percent 1 --cores {params.numThreads} > {output}"
@@ -102,7 +97,7 @@ rule quast:
         expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),# zip, species=set(SAMPLES["species"]), sample=get_species_samples,
     output:
         quastdir = temp(directory("results/quast/report")),
-        quastfile = report("results/quast/filtered_assembly_report.tsv", caption="report/quastreport.tsv", category="quast"),
+        quastfile = report("results/quast/filtered_assembly_report.tsv", caption="report/filtered_assembly_report.rst", category="quast"),
     conda:
         "envs/quast.yaml",
     shell:
@@ -115,7 +110,7 @@ checkpoint ecoli_pymlst:
     input:
         expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered.fasta", sample=ECOLI_SAMS["sample"]),
     output:
-        report("results/mlst/Ecoli_mlst.tsv", caption="report/Ecoli_mlst.tsv", category="mlst"),
+        report("results/mlst/Ecoli_mlst.tsv", caption="report/Ecoli_mlst.rst", category="mlst"),
     params:
         database = "testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
         #database = check_database(config["pymlst"]["database"]),
@@ -126,6 +121,13 @@ checkpoint ecoli_pymlst:
 
 
 
+
+
+###############################################################
+#UNITS = pd.read_csv(config['units'])
+#datasets = list(UNITS['dataset'])
+#unitdict = dict(zip(UNITS.dataset,UNITS.numreads))
+#print(unitdict)
 
 #rule BBdecon:
 #    output:
@@ -174,6 +176,15 @@ checkpoint ecoli_pymlst:
 #        #expand(expand("results/reads/{{d}}/{sp}/{sample}_{{read}}.fastq.gz", zip, sp=SAMPLES["sample"], sample=SAMPLES["species"]), d=datasets, read=[["1", "2"]]),
 #        expand("results/reads/lowcov/{species}/{sample}_1.fastq.gz"),
 
+
+# for trimtool in config["trim"]: #["trimmomatic", "bbduk"]
+#     #import toolrulename
+#     rule:
+#         name: f"trim_{trimtool}"
+#         input: unpack(get_read_paths),
+#         output: f"path/to/{tool}/outputfile"
+#         shell: f"{tool} {{input}} > {{output}}"
+    
 #for i,d in enumerate(datasets):
 #    rulename = f"input_{i}"
 #    rule rulename:
@@ -199,12 +210,6 @@ checkpoint ecoli_pymlst:
 #            seqtk sample -s $SEED {input.RV} $RVFRAC > {output.RVOUT};
 #            """
 
-
-
-#wildcard_constraints:
-#    sams="|".join(list(SAMPLES["sample"])),
-#    d="|".join(list(UNITS["dataset"])),
-#    species="|".join(list(SAMPLES["species"])),
 
 # wildcard_constraints:
 #    # Constraints maybe not needed but in my opinion better to set them
