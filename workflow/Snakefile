@@ -99,7 +99,7 @@ rule filter_contigs:
 
 rule quast:
     input:
-        "results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta",# zip, species=set(SAMPLES["species"]), sample=get_species_samples,
+        expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),# zip, species=set(SAMPLES["species"]), sample=get_species_samples,
     output:
         quastdir = temp(directory("results/quast/report")),
         quastfile = report("results/quast/filtered_assembly_report.tsv", caption="report/quastreport.tsv", category="quast"),
