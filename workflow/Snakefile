@@ -28,19 +28,22 @@ ECOLI_SAMS = SAMPLES.loc[SAMPLES["species"]=="Ecoli"]
 def get_read_paths(wildcards):
     return {"FW": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna(), "RV": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()}
 
-#def aggregate_input(wildcards):
-#        checkpoint_output = checkpoints.ecoli_pymlst.get(**wildcards).output[0]
-
 ##### target rules #####
+
+aggregated_input = [expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #filter contigs
+                    expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #assembly
+                    expand("results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #trim
+                    expand("results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+                    expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #copy raw reads
+                    expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
+]
+
+if "Ecoli" in SAMPLES["species"]:
+    aggregated_input.append("results/mlst/Ecoli_mlst.tsv") #checkpoints.ecoli_pymlst.get(**wildcards).output[0]
 
 rule all:
     input:
-        expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #filter contigs
-        expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #assembly
-        expand("results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #trim
-        expand("results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
-        expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #copy raw reads
-        expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
+        aggregated_input,
 
 #rule input_check
 # assume this checks input files exist and are valid paired fastq.gz, output location is possible, etc
@@ -98,17 +101,12 @@ if not ECOLI_SAMS.empty():
         output:
             "results/mlst/Ecoli_mlst.tsv",
         params:
-           database = "/data/projects/mary/MAnx/testrun/Escherichia.db"
+           database = "/data/projects/mary/MAnx/testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
            #database = check_database(config["pymlst"]["database"]),
             #min_id = check_min_id(config["pymlst"]["min_id"]),
         conda:
-            "envs/pymlst.yaml",
-        threads: 2,
-        resources:
-            time = 10,
-            mem = 8000,
+            "envs/pymlst.yaml"
         shell: "claMLST search {params.db} {input} -o {output}"
-
 
 
 
