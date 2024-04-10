@@ -18,7 +18,7 @@ report: "report/workflow.rst"
 
 #### samples ####
 SAMPLES = pd.read_csv(config["samples"]).set_index(["sample", "species"], drop=False)
-ECOLI_SAMS = samples.loc[samples["species"]=="Ecoli"]
+ECOLI_SAMS = SAMPLES.loc[SAMPLES["species"]=="Ecoli"]
 
 #UNITS = pd.read_csv(config['units'])
 #datasets = list(UNITS['dataset'])
