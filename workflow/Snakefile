@@ -97,7 +97,7 @@ rule quast:
         expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),# zip, species=set(SAMPLES["species"]), sample=get_species_samples,
     output:
         quastdir = temp(directory("results/quast/report")),
-        quastfile = report("results/quast/filtered_assembly_report.tsv", caption="report/filtered_assembly_report.rst", category="quast"),
+        quastfile = "results/quast/filtered_assembly_report.tsv",
     conda:
         "envs/quast.yaml",
     shell:
@@ -110,7 +110,7 @@ checkpoint ecoli_pymlst:
     input:
         expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered.fasta", sample=ECOLI_SAMS["sample"]),
     output:
-        report("results/mlst/Ecoli_mlst.tsv", caption="report/Ecoli_mlst.rst", category="mlst"),
+        "results/mlst/Ecoli_mlst.tsv",
     params:
         database = "testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
         #database = check_database(config["pymlst"]["database"]),
@@ -119,7 +119,30 @@ checkpoint ecoli_pymlst:
         "envs/pymlst.yaml"
     shell: "claMLST search {params.database} {input} -o {output}"
 
+rule report_out:
+    input:
+        mlstin = "results/mlst/Ecoli_mlst.tsv",
+        quastin = "results/quast/filtered_assembly_report.tsv"
+    output:
+        mlstout = report("Ecoli_mlst.tsv", caption="report/Ecoli_mlst.rst", category="mlst"),
+        quastout = report("filtered_assembly_report.tsv", caption="report/filtered_assembly_report.rst", category="quast"),
+    shell:
+        """
+        cp {input.mlstin} {output.mlstout}
+        cp {input.quastin} {output.quastout}
+        """
 
+# move individual html files around for final report directory
+#rule generate_html_hierarchy:
+#    output: report(directory("test"), caption="report/caption.rst", htmlindex="test.html")
+#    shell:
+#        """
+#        # mimic writing of an HTML hierarchy
+#        mkdir test
+#        cp template.html test/test.html
+#        mkdir test/js
+#        echo \"alert('test')\" > test/js/test.js
+#        """
 
 
 
