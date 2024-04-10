@@ -1,0 +1,4 @@
+name: trimmomatic
+
+dependencies:
+  - bioconda::trimmomatic=0.39

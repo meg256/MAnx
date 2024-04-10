@@ -1,0 +1,4 @@
+name: skesa
+
+dependencies:
+  - bioconda::skesa=2.5.1

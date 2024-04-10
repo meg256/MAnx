@@ -1,0 +1,4 @@
+name: bbtools
+
+dependencies:
+  - agbiome::bbtools=37.62

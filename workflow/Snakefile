@@ -33,8 +33,8 @@ rule all:
     input:
         expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #filter contigs
         expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #assembly
-        expand("results/trimmed/trimmomatic/{species}/{sample}_1.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #trim
-        expand("results/trimmed/trimmomatic/{species}/{sample}_2.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+        expand("results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #trim
+        expand("results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
         expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #copy raw reads
         expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
 
@@ -58,24 +58,24 @@ rule trim:
         FW="results/rawreads/{species}/{sample}_1.fastq.gz", 
         RV="results/rawreads/{species}/{sample}_2.fastq.gz"
     output:
-        FWOUT="results/trimmed/trimmomatic/{species}/{sample}_1.trimmed.fastq.gz",
-        RVOUT="results/trimmed/trimmomatic/{species}/{sample}_2.trimmed.fastq.gz"
+        FWOUT="results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz",
+        RVOUT="results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz"
     params:
         numThreads = 25,
-    container:
-        config["singularity_trim"]
-    shell: "TrimmomaticPE -threads {params.numThreads} {input.FW} {input.RV} {output.FOUT} '/dev/null' {output.ROUT} '/dev/null' HEADCROP:2 ILLUMINACLIP:'/usr/share/trimmomatic/TruSeq3-PE-2.fa':2:20:12:1:True SLIDINGWINDOW:3:22 MINLEN:36 CROP:9999 TOPHRED33"
+    conda:
+        "envs/bbtools.yaml"
+    shell: "bbduk.sh -Xmx10g t={params.numThreads} in1={input.FW} in2={input.RV} out1={output.FWOUT} out2={output.RVOUT} ref=adapters,phix ktrim=r k=31 mink=11 hdist=1 tpe tbo"
 
 rule assemble:
     input: 
-        FW="results/trimmed/trimmomatic/{species}/{sample}_1.trimmed.fastq.gz",
-        RV="results/trimmed/trimmomatic/{species}/{sample}_2.trimmed.fastq.gz"
+        FW="results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz",
+        RV="results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz"
     output:
         "results/assembly/skesa/{species}/{sample}.fa",
     params:
         numThreads = 25,
-    container:
-        config["singularity_assemble"],
+    conda:
+        "envs/skesa.yaml"
     shell: "skesa --reads {input.FW},{input.RV} --vector_percent 1 --cores {params.numThreads} > {output}"
 
 rule filter_contigs:
