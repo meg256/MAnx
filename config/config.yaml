@@ -7,6 +7,7 @@ units: config/units.tsv
 
 singularity_input: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/seqviz"
 singularity_trim: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/newtrim"
+singularity_assemble: "docker-registry.wur.nl/wfsr-genomics/ngs-tools/skesa"
 
 results:
   dir: "results/"                         # default results directory. (used if no redirects are specified)

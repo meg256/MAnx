@@ -19,27 +19,29 @@ RESULTS_DIR = config["results"]
 #### samples ####
 SAMPLES = pd.read_csv(config["samples"]).set_index(["sample", "species"], drop=False)
 
-
 UNITS = pd.read_csv(config['units'])
 datasets = list(UNITS['dataset'])
 unitdict = dict(zip(UNITS.dataset,UNITS.numreads))
 print(unitdict)
 
-
 def get_read_paths(wildcards):
     return {"FW": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna(), "RV": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()}
-
-#def get_species(wildcards):
-#    return SAMPLES.loc[wildcards.sample, ['species']].drpona()
 
 ##### target rules #####
 
 rule all:
     input:
-        expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+        expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #filter contigs
+        expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #assembly
+        expand("results/trimmed/trimmomatic/{species}/{sample}_1.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #trim
+        expand("results/trimmed/trimmomatic/{species}/{sample}_2.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+        expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #copy raw reads
         expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
 
-rule get_input:
+#rule input_check
+# assume this checks input files exist and are valid paired fastq.gz, output location is possible, etc
+
+rule copy_raw_reads:
     input:
         unpack(get_read_paths),
     output:
@@ -47,9 +49,56 @@ rule get_input:
         RVOUT="results/rawreads/{species}/{sample}_2.fastq.gz"
     shell:
         """
-        cp {input.FW} {output.FWOUT}
-        cp {input.RV} {output.RVOUT}
+        [[ -f {input.FW} ]] && cp {input.FW} {output.FWOUT}
+        [[ -f {input.RV} ]] && cp {input.RV} {output.RVOUT}
         """
+
+rule trim:
+    input:
+        FW="results/rawreads/{species}/{sample}_1.fastq.gz", 
+        RV="results/rawreads/{species}/{sample}_2.fastq.gz"
+    output:
+        FWOUT="results/trimmed/trimmomatic/{species}/{sample}_1.trimmed.fastq.gz",
+        RVOUT="results/trimmed/trimmomatic/{species}/{sample}_2.trimmed.fastq.gz"
+    params:
+        numThreads = 25,
+    container:
+        config["singularity_trim"]
+    shell: "TrimmomaticPE -threads {params.numThreads} {input.FW} {input.RV} {output.FOUT} '/dev/null' {output.ROUT} '/dev/null' HEADCROP:2 ILLUMINACLIP:'/usr/share/trimmomatic/TruSeq3-PE-2.fa':2:20:12:1:True SLIDINGWINDOW:3:22 MINLEN:36 CROP:9999 TOPHRED33"
+
+rule assemble:
+    input: 
+        FW="results/trimmed/trimmomatic/{species}/{sample}_1.trimmed.fastq.gz",
+        RV="results/trimmed/trimmomatic/{species}/{sample}_2.trimmed.fastq.gz"
+    output:
+        "results/assembly/skesa/{species}/{sample}.fa",
+    params:
+        numThreads = 25,
+    container:
+        config["singularity_assemble"],
+    shell: "skesa --reads {input.FW},{input.RV} --vector_percent 1 --cores {params.numThreads} > {output}"
+
+rule filter_contigs:
+    input:
+        "results/assembly/skesa/{species}/{sample}.fa",
+    output:
+        "results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta"
+    shell:
+        "python3 scripts/filter_contigs.py -i {input} -o {output} -c 20 -l 500"
+
+#rule BBdecon:
+#    output:
+#        FOUT = "trimmed/{d}/BBdecon/{sample}_1.trimmed.fastq.gz",
+#        ROUT = "trimmed/{d}/BBdecon/{sample}_2.trimmed.fastq.gz"
+#    input: 
+##        FW="reads/{d}/{sample}_1.fastq",
+#        RV="reads/{d}/{sample}_2.fastq"
+#    params:
+#        numThreads = 25
+#        ??? define in config
+#    shell:
+#        "BBduk {input.fq1} {input.fq2} {output.fwout}"
+# 
 
 #rule downsample:
 #    input:
