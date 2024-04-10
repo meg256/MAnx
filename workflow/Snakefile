@@ -94,19 +94,18 @@ rule filter_contigs:
         "python3 workflow/scripts/filter_contigs.py -i {input} -o {output} -c 20 -l 500"
 
 
-if not ECOLI_SAMS.empty():
-    checkpoint ecoli_pymlst:
-        input:
-            expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered_contigs.fasta", sample=ECOLI_SAMS["sample"]),
-        output:
-            "results/mlst/Ecoli_mlst.tsv",
-        params:
-           database = "/data/projects/mary/MAnx/testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
-           #database = check_database(config["pymlst"]["database"]),
-            #min_id = check_min_id(config["pymlst"]["min_id"]),
-        conda:
-            "envs/pymlst.yaml"
-        shell: "claMLST search {params.db} {input} -o {output}"
+checkpoint ecoli_pymlst:
+    input:
+        expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered_contigs.fasta", sample=ECOLI_SAMS["sample"]),
+    output:
+        "results/mlst/Ecoli_mlst.tsv",
+    params:
+        database = "/data/projects/mary/MAnx/testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
+        #database = check_database(config["pymlst"]["database"]),
+        #min_id = check_min_id(config["pymlst"]["min_id"]),
+    conda:
+        "envs/pymlst.yaml"
+    shell: "claMLST search {params.db} {input} -o {output}"
 
 
 
