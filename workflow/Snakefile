@@ -38,7 +38,7 @@ aggregated_input = [expand("results/filtered_assembly/skesa/{species}/{sample}.f
                     expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
 ]
 
-if "Ecoli" in SAMPLES["species"]:
+if "Ecoli" in list(SAMPLES["species"]):
     aggregated_input.append("results/mlst/Ecoli_mlst.tsv") #checkpoints.ecoli_pymlst.get(**wildcards).output[0]
 
 rule all:
