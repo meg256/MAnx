@@ -54,8 +54,8 @@ def main(input_fasta, output_fasta, min_cov, min_len):
     wanteddict = {k: v for k, v in fdict.items() if wanted(k, v, min_cov, min_len)}
 
     with open(output_fasta, 'w') as out_file:
-    for k,v in wanteddict.items():
-        out_file.write(k + "\n" + v + "\n")
+        for k,v in wanteddict.items():
+            out_file.write(k + "\n" + v + "\n")
 
     return None
   
