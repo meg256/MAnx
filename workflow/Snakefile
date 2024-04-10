@@ -96,7 +96,7 @@ rule filter_contigs:
 
 checkpoint ecoli_pymlst:
     input:
-        expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered_contigs.fasta", sample=ECOLI_SAMS["sample"]),
+        expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered.fasta", sample=ECOLI_SAMS["sample"]),
     output:
         "results/mlst/Ecoli_mlst.tsv",
     params:
