@@ -100,12 +100,12 @@ checkpoint ecoli_pymlst:
     output:
         "results/mlst/Ecoli_mlst.tsv",
     params:
-        database = "/data/projects/mary/MAnx/testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
+        database = "testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
         #database = check_database(config["pymlst"]["database"]),
         #min_id = check_min_id(config["pymlst"]["min_id"]),
     conda:
         "envs/pymlst.yaml"
-    shell: "claMLST search {params.db} {input} -o {output}"
+    shell: "claMLST search {params.database} {input} -o {output}"
 
 
 
