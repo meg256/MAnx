@@ -84,7 +84,7 @@ rule filter_contigs:
     output:
         "results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta"
     shell:
-        "python3 scripts/filter_contigs.py -i {input} -o {output} -c 20 -l 500"
+        "python3 workflow/scripts/filter_contigs.py -i {input} -o {output} -c 20 -l 500"
 
 #rule BBdecon:
 #    output:
