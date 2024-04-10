@@ -29,8 +29,7 @@ def get_read_paths(wildcards):
 
 ##### target rules #####
 
-aggregated_input = ["report/filtered_assembly_report.rst", "report/Ecoli_mlst.rst",
-                    expand("results/quast/filtered_assembly_report.tsv"),#, species=set(SAMPLES["species"])), #quast
+aggregated_input = [expand("results/quast/filtered_assembly_report.tsv"),#, species=set(SAMPLES["species"])), #quast
                     expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #filter contigs
                     expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #assembly
                     expand("results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #trim
