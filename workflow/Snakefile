@@ -99,39 +99,34 @@ rule quast:
     output:
         quastdir = temp(directory("results/quast/report")),
         quastfile = "results/quast/filtered_assembly_report.tsv",
+        quastrep = report("filtered_assembly_report.tsv", caption="report/filtered_assembly_report.rst", category="quast"),
     conda:
         "envs/quast.yaml",
     shell:
         """
         quast  -o  {output.quastdir} {input}
-        mv {output.quastdir}/transposed_report.tsv {output.quastfile}       
+        mv {output.quastdir}/transposed_report.tsv {output.quastfile}
+        cp {output.quastfile} {output.quastrep}       
         """
 
 checkpoint ecoli_pymlst:
     input:
         expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered.fasta", sample=ECOLI_SAMS["sample"]),
     output:
-        "results/mlst/Ecoli_mlst.tsv",
+        mlstout = "results/mlst/Ecoli_mlst.tsv",
+        reportout = report("Ecoli_mlst.tsv", caption="report/Ecoli_mlst.rst", category="mlst"),
     params:
         database = "testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
         #database = check_database(config["pymlst"]["database"]),
         #min_id = check_min_id(config["pymlst"]["min_id"]),
     conda:
         "envs/pymlst.yaml"
-    shell: "claMLST search {params.database} {input} -o {output}"
+    shell: 
+        """
+        claMLST search {params.database} {input} -o {output.mlstout}
+        cp {output.mlstout} {output.reportout}
+        """
 
-rule report_out:
-    input:
-        mlstin = "results/mlst/Ecoli_mlst.tsv",
-        quastin = "results/quast/filtered_assembly_report.tsv"
-    output:
-        mlstout = report("Ecoli_mlst.tsv", caption="report/Ecoli_mlst.rst", category="mlst"),
-        quastout = report("filtered_assembly_report.tsv", caption="report/filtered_assembly_report.rst", category="quast"),
-    shell:
-        """
-        cp {input.mlstin} {output.mlstout}
-        cp {input.quastin} {output.quastout}
-        """
 
 # move individual html files around for final report directory
 #rule generate_html_hierarchy:
