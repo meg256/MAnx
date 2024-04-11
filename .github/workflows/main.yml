@@ -51,7 +51,8 @@ jobs:
       with:
         directory: .tests
         snakefile: workflow/Snakefile
-        args: "--configfile .tests/config.yaml --use-conda --printshellcmds --show-failed-logs -j 10 --conda-cleanup-pkgs cache --dryrun"
+        args: "--use-conda --printshellcmds --show-failed-logs -j 10 --conda-cleanup-pkgs cache --dryrun"
+        #args: "--configfile .tests/config.yaml --use-conda --printshellcmds --show-failed-logs -j 10 --conda-cleanup-pkgs cache --dryrun"
 
     #- name: Test report
     #  uses: snakemake/snakemake-github-action@v1.24.0
@@ -70,5 +71,6 @@ jobs:
         with:
           directory: .tests
           snakefile: workflow/Snakefile
-          args: "--configfile .tests/config.yaml --use-conda --printshellcmds --show-failed-logs --cores 1 --set-scatter calling=4 --conda-cleanup-pkgs cache"
+          args: "--use-conda --printshellcmds --show-failed-logs --cores 1 --set-scatter calling=4 --conda-cleanup-pkgs cache"
+          #args: "--configfile .tests/config.yaml --use-conda --printshellcmds --show-failed-logs --cores 1 --set-scatter calling=4 --conda-cleanup-pkgs cache"
           show-disk-usage-on-error: true
