@@ -1,10 +1,11 @@
 import pandas as pd
 from snakemake.utils import min_version
 
+
 ##### set minimum snakemake version #####
 min_version("8.8.0")
 
-include: "rules/common.smk"
+#include: "rules/common.smk"
 
 ##### setup report #####
 configfile: "config/config.yaml"
@@ -15,15 +16,19 @@ report: "report/workflow.rst"
 ##### setup singularity ####
 # this container defines the underlying OS for each job when using the workflow
 # with --use-singularity
-container: "docker://continuumio/miniconda3:4.4.10"
+#container: "docker://continuumio/miniconda3:4.4.10"
 
 #### samples ####
 SAMPLES = pd.read_csv(config["samples"]).set_index(["sample", "species"], drop=False)
 ECOLI_SAMS = SAMPLES.loc[SAMPLES["species"]=="Ecoli"]
 
+
 ##### target rules #####
 
-aggregated_input = ["report/filtered_assembly_report.tsv",
+def get_read_paths(wildcards):
+    return {"FW": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna(), "RV": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()}
+
+aggregated_input = ["report/filtered_assembly_report.rst",
                     expand("results/quast/filtered_assembly_report.tsv"),#, species=set(SAMPLES["species"])), #quast
                     expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #filter contigs
                     expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #assembly
@@ -35,7 +40,7 @@ aggregated_input = ["report/filtered_assembly_report.tsv",
 
 if "Ecoli" in list(SAMPLES["species"]):
     aggregated_input.append("results/mlst/Ecoli_mlst.tsv") #checkpoints.ecoli_pymlst.get(**wildcards).output[0]
-    aggregated_input.append("report/Ecoli_mlst.tsv")
+    aggregated_input.append("report/Ecoli_mlst.rst")
 
 rule all:
     input:
@@ -100,7 +105,7 @@ rule quast:
     output:
         quastdir = temp(directory("results/quast/report")),
         quastfile = "results/quast/filtered_assembly_report.tsv",
-        quastrep = report("report/filtered_assembly_report.tsv", caption="report/filtered_assembly_report.rst", category="quast"),
+        quastrep = report("report/filtered_assembly_report.rst", caption="report/filtered_assembly_report.rst", category="quast"),
     log:
         "logs/rule_quast.log",
     conda:
@@ -117,7 +122,7 @@ checkpoint ecoli_pymlst:
         expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered.fasta", sample=ECOLI_SAMS["sample"]),
     output:
         mlstout = "results/mlst/Ecoli_mlst.tsv",
-        reportout = report("report/Ecoli_mlst.tsv", caption="report/Ecoli_mlst.rst", category="mlst"),
+        reportout = report("report/Ecoli_mlst.rst", caption="report/Ecoli_mlst.rst", category="mlst"),
     log:
         "logs/rule_ecoli_pymlst.log",
     params:
