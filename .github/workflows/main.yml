@@ -27,13 +27,13 @@ jobs:
   Linting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v1
     - name: Lint workflow
       uses: snakemake/snakemake-github-action@v1.24.0
       with:
-        directory: .
+        directory: .tests
         snakefile: workflow/Snakefile
-        stagein: "mamba install -y -n snakemake --channel conda-forge pyarrow=6.0"
+        #stagein: "mamba install -y -n snakemake --channel conda-forge pyarrow=6.0"
         args: "--lint"
 
   Dryrun_Tests:
@@ -42,14 +42,14 @@ jobs:
       - Linting
       - Formatting
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v1
 
-    - name: Test workflow
+    - name: Dryrun_test
       uses: snakemake/snakemake-github-action@v1.24.0
       with:
-        directory: .test
+        directory: .tests
         snakefile: workflow/Snakefile
-        args: "--configfile .test/config.yaml --use-conda --printshellcmds --show-failed-logs -j 10 --conda-cleanup-pkgs cache --dryrun"
+        args: "--configfile .tests/config.yaml --use-conda --printshellcmds --show-failed-logs -j 10 --conda-cleanup-pkgs cache --dryrun"
 
     #- name: Test report
     #  uses: snakemake/snakemake-github-action@v1.24.0
@@ -63,10 +63,10 @@ jobs:
     needs:
       - Dryrun_Tests
     steps:
-      - name: Test workflow
-        uses: snakemake/snakemake-github-action@v1.24.0
+      - name: Integration_test
+        uses: snakemake/snakemake-github-action@v1.25.1
         with:
-          directory: .test
+          directory: .tests
           snakefile: workflow/Snakefile
-          args: "--configfile .test/config.yaml --use-conda --printshellcmds --show-failed-logs --cores all --set-scatter calling=4 --conda-cleanup-pkgs cache"
+          args: "--configfile .tests/config.yaml --use-conda --printshellcmds --show-failed-logs --cores all --set-scatter calling=4 --conda-cleanup-pkgs cache"
           show-disk-usage-on-error: true
