@@ -63,10 +63,10 @@ rule copy_raw_reads:
         unpack(get_read_paths),
         #input_file_from_config=lambda wildcards: config["samples"][wildcards.samples]
     output:
-        FWOUT="results/rawreads/{species}/{sample}_1.fastq.gz",
-        RVOUT="results/rawreads/{species}/{sample}_2.fastq.gz"
-        #FWOUT=expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
-        #RVOUT=expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
+        #FWOUT="results/rawreads/{species}/{sample}_1.fastq.gz",
+        #RVOUT="results/rawreads/{species}/{sample}_2.fastq.gz"
+        FWOUT=expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+        RVOUT=expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
     log:
         "logs/rule_copy_raw_reads.log",
     shell:
@@ -76,11 +76,15 @@ rule copy_raw_reads:
         """
 rule trim:
     input:
-        FW="results/rawreads/{species}/{sample}_1.fastq.gz", 
-        RV="results/rawreads/{species}/{sample}_2.fastq.gz"
+        #FW="results/rawreads/{species}/{sample}_1.fastq.gz", 
+        #RV="results/rawreads/{species}/{sample}_2.fastq.gz"
+        FW=expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+        RV=expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
     output:
-        FWOUT="results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz",
-        RVOUT="results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz"
+        #FWOUT="results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz",
+        #RVOUT="results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz"
+        FWOUT=expand("results/trimmed/BBtools/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+        RVOUT=expand("results/trimmed/BBtools/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
     log:
         "logs/rule_trim.log",
     params:
@@ -91,10 +95,12 @@ rule trim:
 
 rule assemble:
     input: 
-        FW="results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz",
-        RV="results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz"
+        #FW="results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz",
+        #RV="results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz"
+        FW=expand("results/trimmed/BBtools/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+        RV=expand("results/trimmed/BBtools/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
     output:
-        "results/assembly/skesa/{species}/{sample}.fa",
+        expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
     log:
         "logs/rule_assemble.log",
     params:
@@ -105,9 +111,9 @@ rule assemble:
 
 rule filter_contigs:
     input:
-        "results/assembly/skesa/{species}/{sample}.fa",
+        expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
     output:
-        "results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta"
+        expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
     shell:
         "python3 workflow/scripts/filter_contigs.py -i {input} -o {output} -c 20 -l 500"
 
