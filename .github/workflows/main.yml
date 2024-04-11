@@ -20,7 +20,7 @@ jobs:
       #- name: Checkout submodules
       #  uses: textbook/git-checkout-submodule-action@2.0.0
       - name: formatting
-        uses: github/super-linter@v6
+        uses: github/super-linter@v3.16.1
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main
