@@ -1,7 +1,15 @@
-input: 
-  samplefile: "config/samples.tsv"
+samples: config/samples.tsv
+
+#  fwd_extension: "_R1_001.fastq.gz"       # Forward read file extension.
+#  rev_extension: "_R2_001.fastq.gz"       # Reverse read file extension.
+
+units: config/units.tsv
 
 numThreads: 4
+
+singularity_input: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/seqviz"
+singularity_trim: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/newtrim"
+singularity_assemble: "docker-registry.wur.nl/wfsr-genomics/ngs-tools/skesa"
 
 results:
   dir: "results/"                         # default results directory. (used if no redirects are specified)
