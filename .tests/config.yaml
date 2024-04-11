@@ -1,4 +1,5 @@
-samples: .tests/samples.tsv
+input: 
+  samplefile: ".tests/samples.tsv"
 
 numThreads: 4
 
