@@ -1,0 +1,5 @@
+name: base
+
+dependencies:
+  - python=3.12
+  - snakemake=8.8.0

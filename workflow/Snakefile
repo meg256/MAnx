@@ -5,7 +5,7 @@ from snakemake.utils import min_version
 ##### set minimum snakemake version #####
 min_version("8.8.0")
 
-#include: "rules/common.smk"
+include: "rules/common.smk"
 
 ##### setup report #####
 configfile: "config/config.yaml"
@@ -24,18 +24,6 @@ report: "report/workflow.rst"
 # with --use-singularity
 #container: "docker://continuumio/miniconda3:4.4.10"
 
-#### samples ####
-samplefile = "config/samples.tsv"
-SAMPLES = pd.read_csv(samplefile).set_index(["sample", "species"], drop=False)
-ECOLI_SAMS = SAMPLES.loc[SAMPLES["species"]=="Ecoli"]
-
-
-##### target rules #####
-
-def get_read_paths(wildcards):
-    fwpath = SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna().format(wildcards=wildcards)
-    rvpath = SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna().format(wildcards=wildcards)
-    return {"FW": fwpath, "RV": rvpath}
 
 aggregated_input = ["report/workflow.rst", "report/filtered_assembly_report.rst",
                     expand("results/quast/filtered_assembly_report.tsv"),#, species=set(SAMPLES["species"])), #quast
@@ -69,7 +57,9 @@ rule copy_raw_reads:
         RVOUT=expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
     log:
         "logs/rule_copy_raw_reads.log",
-    container: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/pythonbase",
+   # container: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/pythonbase",
+    conda:
+        "envs/base.yaml"
     shell:
         """
         [[ -f {input.FW} ]] && cp {input.FW} {output.FWOUT}
@@ -117,7 +107,9 @@ rule filter_contigs:
         expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
     log:
         "logs/rule_filter_contigs.log",
-    container: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/pythonbase",
+    #container: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/pythonbase",
+    conda:
+        "envs/base.yaml"
     shell:
         "python3 workflow/scripts/filter_contigs.py -i {input} -o {output} -c 20 -l 500"
 
