@@ -4,10 +4,11 @@ from snakemake.utils import min_version
 ##### set minimum snakemake version #####
 min_version("8.8.0")
 
+include: "rules/common.smk"
+
 ##### setup report #####
 configfile: "config/config.yaml"
 
-RESULTS_DIR = config["results"]
 report: "report/workflow.rst"
 #report: "report/assemblyqc.html"
 
@@ -19,13 +20,6 @@ container: "docker://continuumio/miniconda3:4.4.10"
 #### samples ####
 SAMPLES = pd.read_csv(config["samples"]).set_index(["sample", "species"], drop=False)
 ECOLI_SAMS = SAMPLES.loc[SAMPLES["species"]=="Ecoli"]
-
-def get_species_samples(wildcards):
-    subs = SAMPLES.loc[SAMPLES["species"]==wildcards.species]
-    return subs["sample"]
-
-def get_read_paths(wildcards):
-    return {"FW": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna(), "RV": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()}
 
 ##### target rules #####
 
@@ -56,6 +50,8 @@ rule copy_raw_reads:
     output:
         FWOUT="results/rawreads/{species}/{sample}_1.fastq.gz", 
         RVOUT="results/rawreads/{species}/{sample}_2.fastq.gz"
+    log:
+        "logs/rule_copy_raw_reads.log",
     shell:
         """
         [[ -f {input.FW} ]] && cp {input.FW} {output.FWOUT}
@@ -68,6 +64,8 @@ rule trim:
     output:
         FWOUT="results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz",
         RVOUT="results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz"
+    log:
+        "logs/rule_trim.log",
     params:
         numThreads = config['numThreads'],
     conda:
@@ -80,6 +78,8 @@ rule assemble:
         RV="results/trimmed/BBtools/{species}/{sample}_2.trimmed.fastq.gz"
     output:
         "results/assembly/skesa/{species}/{sample}.fa",
+    log:
+        "logs/rule_assemble.log",
     params:
         numThreads = config['numThreads'],
     conda:
@@ -101,6 +101,8 @@ rule quast:
         quastdir = temp(directory("results/quast/report")),
         quastfile = "results/quast/filtered_assembly_report.tsv",
         quastrep = report("report/filtered_assembly_report.tsv", caption="report/filtered_assembly_report.rst", category="quast"),
+    log:
+        "logs/rule_quast.log",
     conda:
         "envs/quast.yaml",
     shell:
@@ -116,6 +118,8 @@ checkpoint ecoli_pymlst:
     output:
         mlstout = "results/mlst/Ecoli_mlst.tsv",
         reportout = report("report/Ecoli_mlst.tsv", caption="report/Ecoli_mlst.rst", category="mlst"),
+    log:
+        "logs/rule_ecoli_pymlst.log",
     params:
         database = "resources/Escherichia.db" #can use function to get species-specific database OR name databases by species
         #database = check_database(config["pymlst"]["database"]),
