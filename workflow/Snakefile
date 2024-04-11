@@ -13,8 +13,8 @@ report: "report/workflow.rst"
 
 ##### setup singularity ####
 # this container defines the underlying OS for each job when using the workflow
-# with --use-conda --use-singularity?
-#container: "docker://continuumio/miniconda3"
+# with --use-singularity
+container: "docker://continuumio/miniconda3:4.4.10"
 
 #### samples ####
 SAMPLES = pd.read_csv(config["samples"]).set_index(["sample", "species"], drop=False)
@@ -29,7 +29,8 @@ def get_read_paths(wildcards):
 
 ##### target rules #####
 
-aggregated_input = [expand("results/quast/filtered_assembly_report.tsv"),#, species=set(SAMPLES["species"])), #quast
+aggregated_input = ["report/filtered_assembly_report.tsv",
+                    expand("results/quast/filtered_assembly_report.tsv"),#, species=set(SAMPLES["species"])), #quast
                     expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #filter contigs
                     expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #assembly
                     expand("results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #trim
@@ -40,13 +41,14 @@ aggregated_input = [expand("results/quast/filtered_assembly_report.tsv"),#, spec
 
 if "Ecoli" in list(SAMPLES["species"]):
     aggregated_input.append("results/mlst/Ecoli_mlst.tsv") #checkpoints.ecoli_pymlst.get(**wildcards).output[0]
+    aggregated_input.append("report/Ecoli_mlst.tsv")
 
 rule all:
     input:
         aggregated_input,
 
 #rule input_check
-# assume this checks input files exist and are valid paired fastq.gz, output location is possible, etc
+# placeholder: assume this checks input files exist and are valid paired fastq.gz, output location is possible, etc
 
 rule copy_raw_reads:
     input:
@@ -98,7 +100,7 @@ rule quast:
     output:
         quastdir = temp(directory("results/quast/report")),
         quastfile = "results/quast/filtered_assembly_report.tsv",
-        quastrep = report("filtered_assembly_report.tsv", caption="report/filtered_assembly_report.rst", category="quast"),
+        quastrep = report("report/filtered_assembly_report.tsv", caption="report/filtered_assembly_report.rst", category="quast"),
     conda:
         "envs/quast.yaml",
     shell:
@@ -113,7 +115,7 @@ checkpoint ecoli_pymlst:
         expand("results/filtered_assembly/skesa/Ecoli/{sample}.filtered.fasta", sample=ECOLI_SAMS["sample"]),
     output:
         mlstout = "results/mlst/Ecoli_mlst.tsv",
-        reportout = report("Ecoli_mlst.tsv", caption="report/Ecoli_mlst.rst", category="mlst"),
+        reportout = report("report/Ecoli_mlst.tsv", caption="report/Ecoli_mlst.rst", category="mlst"),
     params:
         database = "testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
         #database = check_database(config["pymlst"]["database"]),
@@ -147,20 +149,6 @@ checkpoint ecoli_pymlst:
 #unitdict = dict(zip(UNITS.dataset,UNITS.numreads))
 #print(unitdict)
 
-#rule BBdecon:
-#    output:
-#        FOUT = "trimmed/{d}/BBdecon/{sample}_1.trimmed.fastq.gz",
-#        ROUT = "trimmed/{d}/BBdecon/{sample}_2.trimmed.fastq.gz"
-#    input: 
-##        FW="reads/{d}/{sample}_1.fastq",
-#        RV="reads/{d}/{sample}_2.fastq"
-#    params:
-#        numThreads = 25
-#        ??? define in config
-#    shell:
-#        "BBduk {input.fq1} {input.fq2} {output.fwout}"
-# 
-
 #rule downsample:
 #    input:
 #        unpack(get_read_paths),
@@ -187,14 +175,19 @@ checkpoint ecoli_pymlst:
 #        """
 
 
-# #FWOUT = expand("results/reads/lowcov/{species}/{sample}_1.fastq.gz"),#, zip, sp=SAMPLES['species'], sample=SAMPLES##['sample']),
-#        #RVOUT = expand("results/reads/lowcov/{species}/{sample}_2.fastq.gz"),#, zip, sp=SAMPLES['species'], sample=SAMPLES['sample']),
-#        #expand(f"results/reads/lowcov/{{sp}}/{{sample}}_1.fastq.gz", zip, sp=SAMPLES["species"], sample=SAMPLES["sample"]),
-#        #expand(f"results/reads/lowcov/{{sp}}/{{sample}}_2.fastq.gz", zip, sp=SAMPLES["species"], sample=SAMPLES["sample"]),
-#        #expand(expand("results/reads/{{d}}/{sp}/{sample}_{{read}}.fastq.gz", zip, sp=SAMPLES["sample"], sample=SAMPLES["species"]), d=datasets, read=[["1", "2"]]),
-#        expand("results/reads/lowcov/{species}/{sample}_1.fastq.gz"),
+# PYTHONIC INPUT SPECIFYING EXPAND WITH ZIP 
+#https://stackoverflow.com/questions/75532295/snakemake-expand-zip-some-wildcards-and-expand-full-the-other
+# for sample, species in zip(BASES, CONTRASTS):
+#     for trimtool in TRIMCOND:
+#         for d in DATASETS:
+#             FW = "results/trimmed/{d}/{trimtool}/{species}/{sample}_1.trimmed.fastq.gz"
+#             RV = "results/trimmed/{d}/{trimtool}/{species}/{sample}_2.trimmed.fastq.gz"
+#             ALL_TRIMMED.append(file)
+# rule all:
+#    input: ALL_TRIMMED
 
-
+# OR: NESTED FOR LOOP
+# https://stackoverflow.com/questions/67999553/how-to-make-a-nested-loop-in-snakemake
 # for trimtool in config["trim"]: #["trimmomatic", "bbduk"]
 #     #import toolrulename
 #     rule:
