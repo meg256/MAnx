@@ -25,6 +25,11 @@ report: "report/workflow.rst"
 # with --use-singularity
 container: "docker://continuumio/miniconda3:4.4.10"
 
+#### samples ####
+samplefile = "config/samples.tsv"
+SAMPLES = pd.read_csv(samplefile).set_index(["sample", "species"], drop=False)
+ECOLI_SAMS = SAMPLES.loc[SAMPLES["species"]=="Ecoli"]
+
 def get_read_paths(wildcards):
     FW = SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna()
     RV = SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()
