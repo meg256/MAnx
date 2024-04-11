@@ -10,11 +10,10 @@ min_version("8.8.0")
 ##### setup report #####
 configfile: "config/config.yaml"
 
-
-if config["input"]["samplefile"]:
-    samplefile = config["input"]["samplefile"]
-else:
-    samplefile = "config/samples.tsv"
+#if config["input"]["samplefile"]:
+#    samplefile = config["input"]["samplefile"]
+#else:
+#    samplefile = "config/samples.tsv"
 
 
 report: "report/workflow.rst"
@@ -26,6 +25,7 @@ report: "report/workflow.rst"
 #container: "docker://continuumio/miniconda3:4.4.10"
 
 #### samples ####
+samplefile = "config/samples.tsv"
 SAMPLES = pd.read_csv(samplefile).set_index(["sample", "species"], drop=False)
 ECOLI_SAMS = SAMPLES.loc[SAMPLES["species"]=="Ecoli"]
 
