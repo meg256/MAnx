@@ -33,7 +33,9 @@ ECOLI_SAMS = SAMPLES.loc[SAMPLES["species"]=="Ecoli"]
 ##### target rules #####
 
 def get_read_paths(wildcards):
-    return {"FW": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna(), "RV": SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()}
+    fwpath = SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna().format(wildcards=wildcards)
+    rvpath = SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna().format(wildcards=wildcards)
+    return {"FW": fwpath, "RV": rvpath}
 
 aggregated_input = ["report/workflow.rst", "report/filtered_assembly_report.rst",
                     expand("results/quast/filtered_assembly_report.tsv"),#, species=set(SAMPLES["species"])), #quast
@@ -61,8 +63,10 @@ rule copy_raw_reads:
         unpack(get_read_paths),
         #input_file_from_config=lambda wildcards: config["samples"][wildcards.samples]
     output:
-        FWOUT=expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
-        RVOUT=expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
+        FWOUT="results/rawreads/{species}/{sample}_1.fastq.gz",
+        RVOUT="results/rawreads/{species}/{sample}_2.fastq.gz"
+        #FWOUT=expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+        #RVOUT=expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
     log:
         "logs/rule_copy_raw_reads.log",
     shell:
