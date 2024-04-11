@@ -9,7 +9,11 @@ min_version("8.8.0")
 
 ##### setup report #####
 #configfile: "config.yaml"
-samplefile = config["input"]["samplefile"]
+if not configfile:
+    configfile = ".tests/config.yaml"
+
+if not config["input"]["samplefile"]:
+    samplefile = ".tests/samples.tsv"
 
 report: "report/workflow.rst"
 #report: "report/assemblyqc.html"
