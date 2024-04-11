@@ -1,2 +1,0 @@
-sample,species,R1,R2
-dummy,Ecoli,tests/data/dummy_R1.fastq.gz,tests/data/dummy_R2.fastq.gz
