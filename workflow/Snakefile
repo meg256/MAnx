@@ -59,6 +59,7 @@ rule all:
 rule copy_raw_reads:
     input:
         unpack(get_read_paths),
+        #input_file_from_config=lambda wildcards: config["samples"][wildcards.samples]
     output:
         FWOUT=expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
         RVOUT=expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
