@@ -8,9 +8,7 @@ min_version("8.8.0")
 #include: "rules/common.smk"
 
 ##### setup report #####
-#configfile: "config.yaml"
-if not configfile:
-    configfile: ".tests/config.yaml"
+configfile: "config/config.yaml"
 
 if not config["input"]["samplefile"]:
     samplefile = ".tests/samples.tsv"

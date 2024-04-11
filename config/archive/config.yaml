@@ -1,0 +1,30 @@
+samples: config/samples.tsv
+
+#  fwd_extension: "_R1_001.fastq.gz"       # Forward read file extension.
+#  rev_extension: "_R2_001.fastq.gz"       # Reverse read file extension.
+
+units: config/units.tsv
+
+numThreads: 4
+
+singularity_input: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/seqviz"
+singularity_trim: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/newtrim"
+singularity_assemble: "docker-registry.wur.nl/wfsr-genomics/ngs-tools/skesa"
+
+results:
+  dir: "results/"                         # default results directory. (used if no redirects are specified)
+#  name: "NEXTERA_LT3_SW420_ML36"                      # subname for output (eg. run_1)
+#  output: null                            # optional redirect of output. if set to null, will generate this folder in the results/<RUN_NAME dir
+#  logs: null                              # optional redirect of logs. if set to null, will generate this folder in the results/<RUN_NAME dir
+#  benchmark: null                         # optional redirect of benchmarks. if set to null, will generate this folder in the results/<RUN_NAME dir
+
+rules:
+  "rules/"                                # path to external rules containing dir (you can omit "workflow/" as this is treated as part of the working dir for snakemake).
+envs:
+  "envs/"                                 # path to environment/container containing dir (you can omit "workflow/" as this is treated as part of the working dir for snakemake).
+scripts:
+  "scripts/"                              # path to external scripts containing dir (you can omit "workflow/" as this is treated as part of the working dir for snakemake).
+config:
+  "config/"                               # path to config file containing dir.
+resources:
+  "resources/"                            # path to additional resources containing dir.
