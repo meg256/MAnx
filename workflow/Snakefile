@@ -8,7 +8,7 @@ min_version("8.8.0")
 #include: "rules/common.smk"
 
 ##### setup report #####
-configfile: "config.yaml"
+#configfile: "config.yaml"
 
 report: "report/workflow.rst"
 #report: "report/assemblyqc.html"
