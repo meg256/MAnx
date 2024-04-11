@@ -117,7 +117,7 @@ checkpoint ecoli_pymlst:
         mlstout = "results/mlst/Ecoli_mlst.tsv",
         reportout = report("report/Ecoli_mlst.tsv", caption="report/Ecoli_mlst.rst", category="mlst"),
     params:
-        database = "testrun/Escherichia.db" #can use function to get species-specific database OR name databases by species
+        database = "resources/Escherichia.db" #can use function to get species-specific database OR name databases by species
         #database = check_database(config["pymlst"]["database"]),
         #min_id = check_min_id(config["pymlst"]["min_id"]),
     conda:
