@@ -1,8 +1,10 @@
 # Snakemake workflow: MAnx (Microbial Assembler quaNtitative eXploration)
 
-[![Workflow rule graph]([LINK/TO/OUTPUT.svg)]([https://github.com/snakemake/snakemake/blob/main/docs/snakefiles/deployment.rst](https://github.com/snakemake/snakemake/blob/main/docs/snakefiles/deployment.rst))](Snakemake Deployment Best Practices)
+[![Workflow rule graph]([rulegraph.svg)]
 
-[![GitHub actions status](https://github.com/<owner>/<repo>/workflows/Tests/badge.svg?branch=main)](https://github.com/<owner>/<repo>/actions?query=branch%3Amain+workflow%3ATests)
+[https://github.com/snakemake/snakemake/blob/main/docs/snakefiles/deployment.rst](Snakemake Deployment Best Practices)
+
+[![GitHub actions status](https://github.com/meg256/MAnx/workflows/Tests/badge.svg?branch=main)](https://github.com/meg256/MAnx/actions?query=branch%3Amain+workflow%3ATests)
 
 # Workflow summary
 
