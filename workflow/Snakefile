@@ -6,7 +6,7 @@ from snakemake.utils import min_version
 ##### set minimum snakemake version #####
 min_version("8.8.0")
 
-include: "rules/common.smk"
+#include: "rules/common.smk"
 
 ##### setup report #####
 configfile: "config/config.yaml"
@@ -23,17 +23,17 @@ report: "report/workflow.rst"
 ##### setup singularity ####
 # this container defines the underlying OS for each job when using the workflow
 # with --use-singularity
-#container: "docker://continuumio/miniconda3:4.4.10"
+container: "docker://continuumio/miniconda3:4.4.10"
 
-#def get_read_paths(wildcards):
-#    FW = SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna()
-#    RV = SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()
-#   return FW, RV
+def get_read_paths(wildcards):
+    FW = SAMPLES.loc[(wildcards.sample, wildcards.species), ['R1']].dropna()
+    RV = SAMPLES.loc[(wildcards.sample, wildcards.species), ['R2']].dropna()
+    return FW, RV
 
 ##### target rules #####
 
 aggregated_input = ["report/workflow.rst", "report/filtered_assembly_report.rst",
-                    expand("results/quast/filtered_assembly_report.tsv"),#, species=set(SAMPLES["species"])), #quast
+                    expand("results/quast/filtered_assembly_report.tsv"), # species=set(SAMPLES["species"]), #quast
                     expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #filter contigs
                     expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #assembly
                     expand("results/trimmed/BBtools/{species}/{sample}_1.trimmed.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']), #trim
@@ -55,9 +55,9 @@ rule all:
 
 rule copy_raw_reads: #use as stand-in for any initial file processing rule
     input:
-        unpack(get_read_paths),
+        #unpack(get_read_paths),
         #input_file_from_config=lambda wildcards: config["samples"][wildcards.samples]
-        #FW, RV = get_read_paths,
+        FW, RV = get_read_paths,
     output:
         #FWOUT="results/rawreads/{species}/{sample}_1.fastq.gz",
         #RVOUT="results/rawreads/{species}/{sample}_2.fastq.gz"
