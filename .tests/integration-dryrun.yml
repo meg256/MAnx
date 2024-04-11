@@ -1,0 +1,22 @@
+- name: integration-dryrun
+  tags:
+    - dryrun
+  command: >
+    snakemake
+      --dryrun
+      --printshellcmds
+      --configfile tests/config.json
+      --snakefile Snakefile
+  exit_code: 0
+  stdout:
+    contains:
+      - Building DAG of jobs...
+      - Finished job 3.
+      # Test that the settings from the --configfile are used?
+      #contains_regex:
+      #- echo common.smk settingsfile third_setting
+    must_not_contain:
+      - rror
+  stderr:
+    must_not_contain:
+      - rror

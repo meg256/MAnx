@@ -1,0 +1,26 @@
+- name: integration-redmar
+  tags:
+    - integration
+  command: >
+    snakemake
+      --printshellcmds
+      --jobs 1
+      --latency-wait 5
+      --notemp
+      --keep-incomplete
+      --use-conda
+      --configfile tests/config.yaml
+      --snakefile Snakefile
+  stdout:
+    must_not_contain:
+      - rror
+  stderr:
+    must_not_contain:
+      - rror
+  files:
+    - path: results/rawreads/Ecoli/dummy_1.fastq.gz
+    - path: results/trimmed/BBtools/Ecoli/dummy_1.trimmed.fastq.gz
+    - path: results/assembly/skesa/Ecoli/dummy.fa
+    - path: results/filtered_assembly/skesa/Ecoli/dummy.filtered.fasta
+    - path: results/quast/filtered_assembly_report.tsv
+    - path: results/mlst/Ecoli_mlst.tsv
