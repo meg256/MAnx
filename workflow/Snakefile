@@ -69,6 +69,7 @@ rule copy_raw_reads:
         RVOUT=expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
     log:
         "logs/rule_copy_raw_reads.log",
+    container: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/pythonbase",
     shell:
         """
         [[ -f {input.FW} ]] && cp {input.FW} {output.FWOUT}
@@ -114,6 +115,9 @@ rule filter_contigs:
         expand("results/assembly/skesa/{species}/{sample}.fa", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
     output:
         expand("results/filtered_assembly/skesa/{species}/{sample}.filtered.fasta", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+    log:
+        "logs/rule_filter_contigs.log",
+    container: "docker://docker-registry.wur.nl/wfsr-genomics/ngs-tools/pythonbase",
     shell:
         "python3 workflow/scripts/filter_contigs.py -i {input} -o {output} -c 20 -l 500"
 
