@@ -6,18 +6,23 @@ on:
   pull_request:
     branches: [ main ]
 
+defaults:
+  run:
+    # This is needed for miniconda, see:
+    # https://github.com/marketplace/actions/setup-miniconda#important.
+    shell: bash -l {0}
 
 jobs:
   Formatting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v1
         with:
           # Full git history is needed to get a proper
           # list of changed files within `super-linter`
           fetch-depth: 0
       - name: Formatting
-        uses: github/super-linter@v4
+        uses: github/super-linter@v3.16.1
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main
@@ -43,7 +48,6 @@ jobs:
       - Formatting
     steps:
     - uses: actions/checkout@v1
-
     - name: Dryrun_test
       uses: snakemake/snakemake-github-action@v1.24.0
       with:
@@ -64,9 +68,9 @@ jobs:
       - Dryrun_Tests
     steps:
       - name: Integration_test
-        uses: snakemake/snakemake-github-action@v1.25.1
+        uses: snakemake/snakemake-github-action@v1.24.0
         with:
           directory: .tests
           snakefile: workflow/Snakefile
-          args: "--configfile .tests/config.yaml --use-conda --printshellcmds --show-failed-logs --cores all --set-scatter calling=4 --conda-cleanup-pkgs cache"
+          args: "--configfile .tests/config.yaml --use-conda --printshellcmds --show-failed-logs --cores 1 --set-scatter calling=4 --conda-cleanup-pkgs cache"
           show-disk-usage-on-error: true
