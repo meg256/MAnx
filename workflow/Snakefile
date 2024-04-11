@@ -60,8 +60,8 @@ rule copy_raw_reads:
     input:
         unpack(get_read_paths),
     output:
-        FWOUT="results/rawreads/{species}/{sample}_1.fastq.gz", 
-        RVOUT="results/rawreads/{species}/{sample}_2.fastq.gz"
+        FWOUT=expand("results/rawreads/{species}/{sample}_1.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample']),
+        RVOUT=expand("results/rawreads/{species}/{sample}_2.fastq.gz", zip, species=SAMPLES['species'], sample=SAMPLES['sample'])
     log:
         "logs/rule_copy_raw_reads.log",
     shell:
