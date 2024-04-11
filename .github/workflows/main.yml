@@ -67,6 +67,6 @@ jobs:
         uses: snakemake/snakemake-github-action@v1.24.0
         with:
           directory: .test
-            snakefile: workflow/Snakefile
-        args: "--configfile .test/config.yaml --use-conda --printshellcmds --show-failed-logs --cores all --set-scatter calling=4 --conda-cleanup-pkgs cache"
-        show-disk-usage-on-error: true
+          snakefile: workflow/Snakefile
+          args: "--configfile .test/config.yaml --use-conda --printshellcmds --show-failed-logs --cores all --set-scatter calling=4 --conda-cleanup-pkgs cache"
+          show-disk-usage-on-error: true
